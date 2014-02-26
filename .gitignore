@@ -7,4 +7,5 @@
 /bin
 .project
 .classpath
+/.settings
 /settings
