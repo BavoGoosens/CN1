@@ -329,6 +329,12 @@ public class Request implements Runnable {
 		this.status = null;
 	}
 
+	/**
+	 * This method returns the content type (header) of the data that is being transmitted.
+	 * 
+	 * @return String
+	 * 		   A String which contains the content type for this request.
+	 */
 	private String getContentType(){
 		Pattern pattern = Pattern.compile("\\/[a-z]*\\.([a-z]*)");
 		Matcher matcher = pattern.matcher(this.path_to_file);
@@ -338,8 +344,16 @@ public class Request implements Runnable {
 		if(subtype.equals("jpeg") || subtype.equals("jpg") || subtype.equals("png") || subtype.equals("gif"))
 			return "image/"+ subtype ;
 		return "text/html";
-	}
+	} 
 
+	/**
+	 * This method reads the input stream and returns the request as a whole on the appropriate time.
+	 * 
+	 * @param instream
+	 * 		  The input stream for this request.
+	 * 
+	 * @throws IOException
+	 */
 	private String initRequest(BufferedReader instream) throws IOException{ 
 		String request = "";
 		while (true) {

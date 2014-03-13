@@ -95,8 +95,8 @@ public class WebClient {
 			bufferedWriter.flush();
 			StringBuilder sb = new StringBuilder();
 			String str;
-			while ((str = bufferedReader.readLine()) != null) {
-				sb.append(str);
+			while (bufferedReader.ready()) {
+				System.out.println(bufferedReader.readLine());
 			}
 			bufferedReader.close();
 			return sb.toString();
