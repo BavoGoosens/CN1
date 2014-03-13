@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -105,7 +107,7 @@ public class Request implements Runnable {
 			if ((this.command.equals("GET") || this.command.equals("HEAD")) && this.status == null){
 				try {
 					this.content = Files.readAllBytes( Paths.get("/home/batman/git/CN1/" + this.path_to_file));
-					this.status = "200";
+					this.status = "200 OK";
 					this.outputRequest();
 				} catch (IOException e){
 					this.error404();
@@ -113,12 +115,35 @@ public class Request implements Runnable {
 				}
 			}else if ((this.command.equals("PUT") || this.command.equals("POST")) && this.status == null){
 				// PUT or POST
-				
+				BufferedWriter bw = null;
+				try{
+					FileWriter fw = null;
+					if (this.command.equals("POST"))
+						// append to the file
+						fw = new FileWriter(Paths.get("/home/batman/git/CN1/" + this.path_to_file).toFile(),true);
+					else 
+						// replace the file
+						fw = new FileWriter(Paths.get("/home/batman/git/CN1/" + this.path_to_file).toFile(),false);
+					bw = new BufferedWriter(fw);
+					bw.write(this.body);
+					this.status = "200 OK";
+					this.content = "Done\n".getBytes();
+					this.outputRequest();
+				} catch (IOException e){
+					this.error500();
+					this.outputRequest();
+				} finally{
+					if(bw != null) {
+						bw.close();
+					}				
+				}
 			}else{
 				// There is something wrong.
+				this.error500();
+				this.outputRequest();
 			}
 		} catch (Exception e){
-			System.out.println("Something went horrebly wrong");
+			System.out.println(e.getMessage());
 		} finally {
 			if (this.version.equals("HTTP/1.0")){
 				try{
@@ -128,11 +153,13 @@ public class Request implements Runnable {
 					notifyAll();
 				} catch (Exception e){}
 			} else {
-				try {
-					this.parse(this.initRequest(this.instream));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				this.status = null;
+				run();
+//				try {
+//					this.parse(this.initRequest(this.instream));
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
 			}
 		}
 	}
@@ -248,7 +275,7 @@ public class Request implements Runnable {
 	 * This method sets a 400 BAD request status.
 	 */
 	private void error400() throws IOException {
-		this.status = "400";
+		this.status = "400 Bad Request";
 		String temp  = "<html>"
 				+ "<body>"
 				+ "<h1> No Host: header received</h1>"
@@ -261,7 +288,7 @@ public class Request implements Runnable {
 	 * This method sets a 500 Server error status.
 	 */
 	private void error500(){
-		this.status = "500";
+		this.status = "500 Server Error";
 		String temp  = "<html>"
 				+ "<body>"
 				+ "<h1> 500 Server ERROR</h1>"
@@ -274,7 +301,7 @@ public class Request implements Runnable {
 	 * This method sets a 500 File not found status.
 	 */
 	private void error404(){
-		this.status = "404";
+		this.status = "404 File Not Found";
 		String temp  = "<html>"
 				+ "<body>"
 				+ "<h1> 404 File not found </h1>"
@@ -299,6 +326,7 @@ public class Request implements Runnable {
 		if (!this.command.equals("HEAD"))
 			this.outstream.write(content);
 		this.outstream.flush();
+		this.status = null;
 	}
 
 	private String getContentType(){

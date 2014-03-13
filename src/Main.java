@@ -5,6 +5,6 @@ public class Main {
 		WebServer wb = new WebServer(8001);
 		Thread server = new Thread(wb);
 		server.start();
-		// WebClient wc = new WebClient();
+		WebClient wc = new WebClient();
 	}
 }
